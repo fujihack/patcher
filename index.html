@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>FujiHack Patcher</title>
+	<meta charset="UTF-8">
+	<!-- <link rel="icon" href="favicon.ico"> -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Hacks and tweaks for Fujifilm cameras">
+	<meta name="author" content="Daniel Cook">
+	<style>
+	.panel {
+		margin-top: 10px;
+		padding: 5px;
+		border: 2px solid black;
+		width: 50%;
+		display: block;
+		overflow-x: scroll;
+	}
+
+	#info p {
+		padding: 0px;
+		margin: 5px;
+	}
+
+	#info p i {
+		font-size: small;
+	}
+
+	#info .header {
+		font-size: 25px;
+	}
+
+	@media (max-width: 1000px) {
+		.panel {
+			margin: 10 auto;
+			width: auto;
+		}
+	}
+
+	#log span {
+		display: block;
+	}
+	</style>
+</head>
+<body>
+	<h1>Fujifilm X/GFX Firmware Patcher</h1>
+	<p>Written by <a href="https://danielc.dev/">Daniel Cook</a></p>
+	<ul>
+		<li><a href="https://github.com/fujihack/fujihack">Learn more about the FujiHack project</a></li>
+		<li><a href="https://discord.gg/UZXDktvAZP">Ask questions</a></li>
+		<li><a href="https://ko-fi.com/petabyte">Buy the developer a coffee</a></li>
+	</ul>
+	<span>Select firmware DAT: </span><input id="input" onchange="load()" type="file">
+	<div class="panel" id="log"></div>
+	<div class="panel" id="info">Information on your model goes here.</div>
+	<div class="panel" id="tweaks">Tweak options will go here.</div>
+</body>
+<script src="cpp/cpp.js"></script>
+<script src="ui.js"></script>
+<script src="patcher.js"></script>
+</html>
