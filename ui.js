@@ -81,7 +81,22 @@ var ui = {
 				name: this.tweaks[n].name,
 				elem: input
 			});
-		}	
+		}
+
+		var btn = document.createElement("BUTTON");
+		btn.innerText = "Compile patched firmware";
+		btn.addEventListener("click", function() {
+			firmware.compile();
+		});
+		tweaks.appendChild(btn);
+	},
+
+	checkTweak: function(name) {
+		for (var i = 0; i < this.tweakElems.length; i++) {
+			if (this.tweakElems[i].name == name) {
+				return this.tweakElems[i].elem.checked;
+			}
+		}
 	},
 
 	log: function(text) {

@@ -32,6 +32,14 @@ function unxor(bytes) {
 	return new Uint8Array(b);
 }
 
+// Like C memcpy, but has an optional offset, so equivelant to:
+// memcpy(a + o, b, n);
+function memcpy(a, b, n, o) {
+	for (var i = 0; i < n; i++) {
+		a[i + o] = b[i];
+	}
+}
+
 // ,With offset for second data
 // Will oveflow, but JS likes to return "undefined"
 function compareBytes(a, b, n, o) {
@@ -47,13 +55,27 @@ function compareBytes(a, b, n, o) {
 function parseUint32(bytes, offset) {
 	bytes = new Uint8Array(bytes).slice(offset, offset + 4);
 	return new Uint32Array(bytes.buffer)[0];
-};
+}
+
+function bytesUint32(num) {
+	var arr = new ArrayBuffer(4);
+	var view = new DataView(arr);
+	view.setUint32(0, num, true);
+	return new Uint8Array(arr);
+}
+
+// Extra check
+if (parseUint32(bytesUint32(123456), 0) != 123456) {
+	document.write("HALT!!! Little endian error!! Contact the devs!!!");
+}
 
 var firmware = {
 	init: function() {
+		this.reader = null;
 		this.blob = null;
-		this.length = 0;
+		this.size = 0;
 		this.buffer = null;
+		this.result = null;
 
 		this.header = {
 			os: null,
@@ -61,8 +83,11 @@ var firmware = {
 			version1: 0,
 			version2: 0,
 			checksum: 0,
-			end: 0
+			end: 0,
+			size: 0
 		};
+
+		this.injections = [];
 	},
 
 	// Load as array buffer
@@ -75,7 +100,7 @@ var firmware = {
 			return 1;
 		}
 
-		this.length = file.files[0].size;
+		this.size = file.files[0].size;
 
 		var reader = new FileReader();
 		this.reader = reader;
@@ -140,13 +165,96 @@ var firmware = {
 		this.header.checksum = parseUint32(header, 4 + codeSize + 4 + 4)
 		this.header.end = parseUint32(header, 4 + codeSize + 4 + 4 + 4)
 
+		this.header.size = 4 + codeSize + 4 + 4 + 4 + 4;
+
 		ui.log("Firmware version is " + this.header.version1.toString(16) + "." + this.header.version2.toString(16));
 		ui.log("Firmware checksum is 0x" + this.header.checksum.toString(16));
 		ui.log("Model code is " + this.parseCode());
 	},
 	
-	inject: function() {
-		
+	inject: function(address, data) {
+		this.injections.push({
+			address: address,
+			data: data
+		});
+	},
+
+	compile: function() {
+		this.result = new Uint8Array(firmware.size);
+		var max = 1024;
+		var chunks = Math.floor(firmware.size / max);
+
+		for (var chunk = 0; chunk <= chunks; chunk++) {
+			var data = new Uint8Array(this.reader.result.slice(chunk * max, chunk * max + max));
+			for (var i = 0; i < data.length; i++) {
+				this.result[(chunk * max) + i] = data[i];
+			}
+		}
+
+		var offset = 4 + this.header.code.length + 4;
+
+		if (ui.checkTweak("increment version")) {
+			ui.log("Incrementing version by one...")
+			memcpy(this.result, bytesUint32(this.header.version2 + 1), 4, offset);
+		}
+
+		if (ui.checkTweak("change shooting menu")) {
+			ui.log("Looking for SHOOTING MENU...");
+
+			var shootingmenu = stringToUnicodeBytes("SHOOTING MENU");
+			var mem = this.search(shootingmenu, shootingmenu.length);
+
+			ui.log("Found it at " + mem.toString(16));
+
+			var newString = stringToUnicodeBytes("FujiHacked!");
+
+			this.inject(mem, newString);
+
+		}
+
+		for (var i = 0; i < this.injections.length; i++) {
+			var size = this.injections[i].data.length;
+
+			var checksum1 = 0;
+			for (var c = 0; c < size; c++) {
+				checksum1 += new Uint8Array([~this.result[this.injections[i].address + c]])[0];
+			}
+
+			var checksum2 = 0;
+			for (var c = 0; c < size; c++) {
+				checksum2 += this.injections[i].data[c];
+			}
+
+			console.log(checksum1, checksum2);
+
+			if (checksum1 < checksum2) {
+				this.header.checksum -= checksum2 - checksum1;
+				ui.log("Subtracted " + String(checksum2 - checksum1) + " from checksum.");
+			} else if (checksum1 > checksum2) {
+				this.header.checksum += checksum1 - checksum2;
+				ui.log("Added " + String(checksum2 + checksum1) + " from checksum.");
+			}
+
+			console.log(this.header.checksum.toString(16));
+
+			// Xor injection and copy into firmware
+			xored = unxor(this.injections[i].data);
+			memcpy(this.result, xored, this.injections[i].data.length, this.injections[i].address);
+
+			// Write modified checksum
+			memcpy(this.result, bytesUint32(this.header.checksum), 4, 4 + this.header.code.length + 4 + 4);
+		}
+
+		ui.log("<dummy style='color: green;'>Finished patching firmware.</dummy>");
+
+		var a = document.createElement("A");
+		a.innerText = "Download patched firmware";
+		a.href = window.URL.createObjectURL(new Blob([this.result], {
+			type: "application/octet-stream"
+		}));
+		a.download = "FPUPDATE.DAT";
+		document.getElementById("download").appendChild(a);
+
 	},
 
 	// This skips the last >1024 bytes because it makes the code
@@ -154,7 +262,7 @@ var firmware = {
 	// anyway
 	search: function(search, n) {
 		var max = 1024;
-		var chunks = Math.floor(firmware.length / max) - 1;
+		var chunks = Math.floor(firmware.size / max) - 1;
 
 		for (var chunk = 0; chunk <= chunks; chunk++) {
 			var data = new Uint8Array(this.reader.result.slice(chunk * max, chunk * max + max));

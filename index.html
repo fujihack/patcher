@@ -17,6 +17,14 @@
 		overflow-x: scroll;
 	}
 
+	button {
+		margin-top: 10px;
+		padding: 5px;
+		border: 2px solid black;
+		width: 50%;
+		display: block;
+	}
+
 	#info p {
 		padding: 0px;
 		margin: 5px;
@@ -51,8 +59,9 @@
 		<li><a href="https://ko-fi.com/petabyte">Buy the developer a coffee</a></li>
 	</ul>
 	<span>Select firmware DAT: </span><input id="input" onchange="load()" type="file">
-	<div class="panel" id="log"></div>
+	<div id="download"></div>
 	<div class="panel" id="info">Information on your model goes here.</div>
+	<div class="panel" id="log"></div>
 	<div class="panel" id="tweaks">Tweak options will go here.</div>
 </body>
 <script src="cpp/cpp.js"></script>
