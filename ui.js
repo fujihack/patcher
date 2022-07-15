@@ -56,6 +56,7 @@ var ui = {
 
 	initTweaks: function() {
 		var tweaks = document.getElementById("tweaks");
+		tweaks.innerHTML = "";
 
 		for (var n = 0; n < this.tweaks.length; n++) {
 			var p = document.createElement("P");
