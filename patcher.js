@@ -66,11 +66,13 @@ function bytesUint32(num) {
 
 // Extra check
 if (parseUint32(bytesUint32(123456), 0) != 123456) {
-	document.write("HALT!!! Little endian error!! Contact the devs!!!");
+	document.write("HALT - Endian error");
 }
 
 var firmware = {
 	init: function() {
+		this.version = "";
+
 		this.reader = null;
 		this.blob = null;
 		this.size = 0;
@@ -96,7 +98,6 @@ var firmware = {
 			ui.log("Only select one file.");
 			return 1;
 		} else if (file.files.length == 0) {
-			ui.log("No file selected.");
 			return 1;
 		}
 
@@ -166,6 +167,12 @@ var firmware = {
 		this.header.end = parseUint32(header, 4 + codeSize + 4 + 4 + 4)
 
 		this.header.size = 4 + codeSize + 4 + 4 + 4 + 4;
+
+		this.version = firmware.header.version1.toString(16);
+		if (firmware.header.version2 < 16) {
+			this.version += 0;
+		}
+		this.version += firmware.header.version2.toString(16);
 
 		ui.log("Firmware version is " + this.header.version1.toString(16) + "." + this.header.version2.toString(16));
 		ui.log("Firmware checksum is 0x" + this.header.checksum.toString(16));
@@ -300,73 +307,71 @@ function request(url, callback) {
 
 // Load the database file try to find what is available
 function loadDatabase() {
-	ui.log("Downloading model database...");
-	request("https://raw.githubusercontent.com/fujihack/patchbuilder/master/data.js", function(data) {
-		models = null;
-		try {
-			models = JSON.parse(data);
-		} catch (e) {
-			ui.log("Couldn't grab the model database.");
+	infoFile.init();
+
+	var modelData = fujihack_data.models;
+
+	var code = firmware.parseCode();
+	for (var m = 0; m < modelData.length; m++) {
+		if (modelData[m].code == code) {
+			ui.log("This firmware belonds to the '" + modelData[m].name + "'");
+			ui.log("Downloading model information file...");
+			request("https://raw.githubusercontent.com/fujihack/fujihack/master/model/" + modelData[m].name + ".h", infoFile.parse);
 			return;
 		}
+	}
 
-		code = firmware.parseCode();
-
-		for (var m = 0; m < models.length; m++) {
-			if (models[m].code == code) {
-				ui.log("This firmware belonds to the '" + models[m].name + "'");
-				ui.log("Downloading model information file...");
-				request("https://raw.githubusercontent.com/fujihack/fujihack/master/model/" + models[m].name + ".h", infoFile.parse);
-				return;
-			}
-		}
-
-		ui.clearInfo();
-		ui.addInfo("No information file found for your model.", "Yet. You can help contribute to the code <a href='https://github.com/fujihack/fujihack'>here</a>: ")		
-	});
+	ui.clearInfo();
+	ui.addInfo("No information file found for your model.", "Yet. You can help contribute to the code <a href='https://github.com/fujihack/fujihack'>here</a>: ");
 }
 
 var infoFile = {
-	cpp: null,
+	init: function() {
+		this.data = "";
+		this.cpp = null;
+	}
+
+	settings: { 
+		signal_char: '#',
+		warn_func: ui.log,
+		error_func: ui.log,
+		include_func: null
+	},
+
 	parse: function(data) {
-		var settings = { 
-			signal_char : '#',
-			warn_func : null,
-			error_func : null,
-			include_func : null,
-		}
+		this.data = data;
+		this.cpp = cpp_js(this.settings);
 
-		var cpp = cpp_js(settings);
-		this.cpp = cpp;
-
-		var header = cpp.run(data);
+		var header = this.cpp.run(data);
 
 		ui.clearInfo();
 
-		var model = eval(cpp.subs("MODEL_NAME"));
+		if (this.cpp.define("MODEL_NAME")) {
+			var model = eval(this.cpp.subs("MODEL_NAME"));
+		}
 
 		ui.clearInfo();
 		ui.addHeader("Tested Hacks for " + model);
 
 		var hacks = 0;
 
-		if (cpp.defined("CAN_CUSTOM_FIRMWARE")) {
+		if (this.cpp.defined("CAN_CUSTOM_FIRMWARE")) {
 			ui.addInfo("Can Do Custom Firmware", "This model was tested with custom firmware and no problems were reported.");
 			hacks++;
 		}
 
-		if (cpp.defined("CAN_DO_EXECUTER")) {
+		if (this.cpp.defined("CAN_DO_EXECUTER")) {
 			ui.addInfo("Can Do Executor", 
 				"This model was tested with the FujiHack USB executor, which allows anything to be run on the camera with little risk.");
 			hacks++;
 		}
 
-		if (cpp.defined("PRINTIM_HACK_WORKS")) {
+		if (this.cpp.defined("PRINTIM_HACK_WORKS")) {
 			ui.addInfo("PRINTIM Hack Works", "This model was tested with a hack that activates when a picture is taken.")
 			hacks++;
 		}
 
-		if (cpp.defined("MEMO_HACK_WORKS")) {
+		if (this.cpp.defined("MEMO_HACK_WORKS")) {
 			ui.addInfo("Voice Memo Hack Works", "This model was tested with a hack that activates when a voice memo is recorded");
 			hacks++;
 		}
@@ -378,12 +383,24 @@ var infoFile = {
 	}
 }
 
-function patch() {
-	
+function assemble(file, base) {
+	var a = new ks.Keystone(ks.ARCH_ARM, ks.MODE_LITTLE_ENDIAN);
+	var cpp = cpp_js(infoFile.settings);
+	var processed = cpp.run(infoFile.file + file);
+
+	var code;
+	try {
+		code = a.asm(processed, base);
+	} catch (err) {
+		ui.log(err);
+		ui.log("Error assembling code.");
+		return 1;
+	}
+
+	return code;
 }
 
 function load() {
-	ui.clear();	
 	firmware.init();
 	firmware.load(ui.input, function() {
 		if (firmware.parse() == 1) {
