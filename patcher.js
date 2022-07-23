@@ -1,5 +1,3 @@
-// This assumes little endian
-
 function stringToBytes(string) {
 	b = []
 	for (var c = 0; c < string.length; c++) {
@@ -260,8 +258,10 @@ var firmware = {
 			type: "application/octet-stream"
 		}));
 		a.download = "FPUPDATE.DAT";
-		document.getElementById("download").appendChild(a);
-
+		ui.clearInfo();
+		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
+			"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
+		ui.info.appendChild(a);
 	},
 
 	// This skips the last >1024 bytes because it makes the code
@@ -329,7 +329,7 @@ var infoFile = {
 	init: function() {
 		this.data = "";
 		this.cpp = null;
-	}
+	},
 
 	settings: { 
 		signal_char: '#',
@@ -346,8 +346,9 @@ var infoFile = {
 
 		ui.clearInfo();
 
-		if (this.cpp.define("MODEL_NAME")) {
-			var model = eval(this.cpp.subs("MODEL_NAME"));
+		var model = "''";
+		if (this.cpp.defined("MODEL_NAME")) {
+			model = eval(this.cpp.subs("MODEL_NAME"));
 		}
 
 		ui.clearInfo();
