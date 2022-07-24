@@ -118,8 +118,9 @@ var firmware = {
 			split += String.fromCharCode(this.header.code[i]);
 		}
 
+		// Trim off trailing zero char / null terminator
 		for (var i = split.length - 1; i != 0; i--) {
-			if (split[i] != '0') {
+			if (split[i] != '0' && split[i] != '\0') {
 				return split.slice(0, i + 1);
 			}
 		}
@@ -209,12 +210,14 @@ var firmware = {
 			var shootingmenu = stringToUnicodeBytes("SHOOTING MENU");
 			var mem = this.search(shootingmenu, shootingmenu.length);
 
-			ui.log("Found it at " + mem.toString(16));
-
-			var newString = stringToUnicodeBytes("FujiHacked!");
-
-			this.inject(mem, newString);
-
+			if (mem == -1) {
+				ui.log("Search failed.");
+				return; // TODO: will compiling firmware again interfere with last compilation?
+			} else {
+				ui.log("Found it at " + mem.toString(16));
+				var newString = stringToUnicodeBytes("FujiHacked!");
+				this.inject(mem, newString);
+			}
 		}
 
 		for (var i = 0; i < this.injections.length; i++) {
@@ -262,6 +265,7 @@ var firmware = {
 		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
 			"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
 		ui.info.appendChild(a);
+		ui.style.background = "grey";
 	},
 
 	// This skips the last >1024 bytes because it makes the code
@@ -313,6 +317,7 @@ function loadDatabase() {
 
 	var code = firmware.parseCode();
 	for (var m = 0; m < modelData.length; m++) {
+		console.log(modelData[m], code)
 		if (modelData[m].code == code) {
 			ui.log("This firmware belonds to the '" + modelData[m].name + "'");
 			ui.log("Downloading model information file...");
