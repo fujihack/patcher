@@ -68,6 +68,7 @@ if (parseUint32(bytesUint32(123456), 0) != 123456) {
 }
 
 var firmware = {
+	modified: false,
 	init: function() {
 		this.version = "";
 
@@ -186,6 +187,11 @@ var firmware = {
 	},
 
 	compile: function() {
+		if (this.modified) {
+			ui.log("Firmware buffer has been modified. Please refresh the page.");
+			return 1;
+		}
+	
 		this.result = new Uint8Array(firmware.size);
 		var max = 1024;
 		var chunks = Math.floor(firmware.size / max);
@@ -220,6 +226,20 @@ var firmware = {
 			}
 		}
 
+		if (ui.checkTweak("voice memo text fujihack")) {
+			ui.log("Looking for VOICE MEMO...");
+			var shootingmenu = stringToUnicodeBytes("VOICE MEMO");
+			var mem = this.search(shootingmenu, shootingmenu.length);
+			if (mem == -1) {
+				ui.log("Search failed.");
+				return;
+			} else {
+				ui.log("Found it at " + mem.toString(16));
+				var newString = stringToUnicodeBytes("FujiHacked!");
+				this.inject(mem, newString);
+			}	
+		}
+
 		for (var i = 0; i < this.injections.length; i++) {
 			var size = this.injections[i].data.length;
 
@@ -233,8 +253,6 @@ var firmware = {
 				checksum2 += this.injections[i].data[c];
 			}
 
-			console.log(checksum1, checksum2);
-
 			if (checksum1 < checksum2) {
 				this.header.checksum -= checksum2 - checksum1;
 				ui.log("Subtracted " + String(checksum2 - checksum1) + " from checksum.");
@@ -242,8 +260,6 @@ var firmware = {
 				this.header.checksum += checksum1 - checksum2;
 				ui.log("Added " + String(checksum2 + checksum1) + " from checksum.");
 			}
-
-			console.log(this.header.checksum.toString(16));
 
 			// Xor injection and copy into firmware
 			xored = unxor(this.injections[i].data);
@@ -265,7 +281,8 @@ var firmware = {
 		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
 			"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
 		ui.info.appendChild(a);
-		ui.style.background = "grey";
+		ui.info.style.background = "#e6e6e6";
+		this.modified = true;
 	},
 
 	// This skips the last >1024 bytes because it makes the code
@@ -311,26 +328,28 @@ function request(url, callback) {
 
 // Load the database file try to find what is available
 function loadDatabase() {
-	infoFile.init();
+	header.init();
 
 	var modelData = fujihack_data.models;
 
 	var code = firmware.parseCode();
 	for (var m = 0; m < modelData.length; m++) {
-		console.log(modelData[m], code)
 		if (modelData[m].code == code) {
 			ui.log("This firmware belonds to the '" + modelData[m].name + "'");
 			ui.log("Downloading model information file...");
-			request("https://raw.githubusercontent.com/fujihack/fujihack/master/model/" + modelData[m].name + ".h", infoFile.parse);
+			request("https://raw.githubusercontent.com/fujihack/fujihack/master/model/" + modelData[m].name + ".h", function(data) {
+				header.parse(data);
+			});
+
 			return;
 		}
 	}
 
 	ui.clearInfo();
-	ui.addInfo("No information file found for your model.", "Yet. You can help contribute to the code <a href='https://github.com/fujihack/fujihack'>here</a>: ");
+	ui.addInfo("No C header info file found for your model.", "Be careful.");
 }
 
-var infoFile = {
+var header = {
 	init: function() {
 		this.data = "";
 		this.cpp = null;
@@ -383,7 +402,7 @@ var infoFile = {
 		}
 
 		if (hacks == 0) {
-			ui.addInfo("...", "No hacks were tested on this model. Be careful.");
+			ui.addInfo("No hacks were tested on this model.", "Be careful.");
 			hacks++;
 		}
 	}
@@ -391,8 +410,8 @@ var infoFile = {
 
 function assemble(file, base) {
 	var a = new ks.Keystone(ks.ARCH_ARM, ks.MODE_LITTLE_ENDIAN);
-	var cpp = cpp_js(infoFile.settings);
-	var processed = cpp.run(infoFile.file + file);
+	var cpp = cpp_js(header.settings);
+	var processed = cpp.run(header.data + file);
 
 	var code;
 	try {
@@ -402,6 +421,8 @@ function assemble(file, base) {
 		ui.log("Error assembling code.");
 		return 1;
 	}
+
+	ui.log("Assembled code");
 
 	return code;
 }

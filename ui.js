@@ -29,7 +29,7 @@ var ui = {
 		{
 			name: "change shooting menu",
 			text: "Change a string",
-			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHack On'. Good as a first test.",
+			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
 			model: null, selected: false
 		},
 		{
