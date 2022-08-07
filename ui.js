@@ -89,6 +89,13 @@ var ui = {
 			firmware.compile();
 		});
 		tweaks.appendChild(btn);
+
+		var btn = document.createElement("BUTTON");
+		btn.innerText = "Export firmware binary";
+		btn.addEventListener("click", function() {
+			firmware.readable();
+		});
+		tweaks.appendChild(btn);
 	},
 
 	checkTweak: function(name) {

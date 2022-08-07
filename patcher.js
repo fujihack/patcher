@@ -115,6 +115,12 @@ var firmware = {
 	// Parse model code in header
 	parseCode: function() {
 		var split = "";
+
+		// Every other byte in model code should be '3' or 0x33
+		if (this.header.code[0] != 0x33) {
+			ui.log("Model code isn't normal. Still valid.");
+		}
+
 		for (var i = 1; i < this.header.code.length; i += 2) {
 			split += String.fromCharCode(this.header.code[i]);
 		}
@@ -145,6 +151,13 @@ var firmware = {
 
 		var codeSize = 512;
 		switch (this.header.os) {
+		case 1:
+			codeSize = 64;
+			if (parseUint32(header, 4) == 0x12) {
+				ui.log("Detected S5 Pro (?). No support right now.");
+				return 0;
+			}
+			break;
 		case 2:
 			codeSize = 128;
 			break;
@@ -177,6 +190,7 @@ var firmware = {
 		ui.log("Firmware version is " + this.header.version1.toString(16) + "." + this.header.version2.toString(16));
 		ui.log("Firmware checksum is 0x" + this.header.checksum.toString(16));
 		ui.log("Model code is " + this.parseCode());
+		return 0;
 	},
 	
 	inject: function(address, data) {
@@ -186,28 +200,32 @@ var firmware = {
 		});
 	},
 
+	// Copy filereader blob into uint8array this.result
+	loadFirmware: function(offset) {
+		this.result = new Uint8Array(firmware.size);
+		var max = 1024;
+		var chunks = Math.floor(firmware.size / max);
+
+		for (var chunk = 0; chunk <= chunks; chunk++) {
+			var data = new Uint8Array(this.reader.result.slice(offset + chunk * max, offset + chunk * max + max));
+			for (var i = 0; i < data.length; i++) {
+				this.result[(chunk * max) + i] = data[i];
+			}
+		}
+	},
+
 	compile: function() {
 		if (this.modified) {
 			ui.log("Firmware buffer has been modified. Please refresh the page.");
 			return 1;
 		}
 	
-		this.result = new Uint8Array(firmware.size);
-		var max = 1024;
-		var chunks = Math.floor(firmware.size / max);
-
-		for (var chunk = 0; chunk <= chunks; chunk++) {
-			var data = new Uint8Array(this.reader.result.slice(chunk * max, chunk * max + max));
-			for (var i = 0; i < data.length; i++) {
-				this.result[(chunk * max) + i] = data[i];
-			}
-		}
-
-		var offset = 4 + this.header.code.length + 4;
+		this.loadFirmware(0);
 
 		if (ui.checkTweak("increment version")) {
-			ui.log("Incrementing version by one...")
-			memcpy(this.result, bytesUint32(this.header.version2 + 1), 4, offset);
+			ui.log("Incrementing version by one...");
+			memcpy(this.result, bytesUint32(this.header.version2 + 1), 4,
+				4 + this.header.code.length + 4);
 		}
 
 		if (ui.checkTweak("change shooting menu")) {
@@ -280,6 +298,25 @@ var firmware = {
 		ui.clearInfo();
 		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
 			"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
+		ui.info.appendChild(a);
+		ui.info.style.background = "#e6e6e6";
+		this.modified = true;
+	},
+
+	readable: function() {
+		this.loadFirmware(this.header.size);
+		for (var i = 0; i < this.result.length; i++) {
+			this.result[i] = ~this.result[i];
+		}
+		
+		var a = document.createElement("A");
+		a.innerText = "Download exported firmware code";
+		a.href = window.URL.createObjectURL(new Blob([this.result], {
+			type: "application/octet-stream"
+		}));
+		a.download = "fpupdate-output.bin";
+		ui.clearInfo();
+		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.", "");
 		ui.info.appendChild(a);
 		ui.info.style.background = "#e6e6e6";
 		this.modified = true;
