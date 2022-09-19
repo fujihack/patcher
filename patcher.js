@@ -1,70 +1,6 @@
-function stringToBytes(string) {
-	b = []
-	for (var c = 0; c < string.length; c++) {
-		b.push(string.charCodeAt(c));
-	}
-
-	b.push(0);
-
-	return new Uint8Array(b);
-}
-
-function stringToUnicodeBytes(string) {
-	b = []
-	for (var c = 0; c < string.length; c++) {
-		b.push(string.charCodeAt(c));
-		b.push(0);
-	}
-
-	b.push(0);
-
-	return new Uint8Array(b);
-}
-
-function unxor(bytes) {
-	b = []
-	for (var i = 0; i < bytes.length; i++) {
-		b.push(~bytes[i]);
-	}
-
-	return new Uint8Array(b);
-}
-
-// Like C memcpy, but has an optional offset, so equivelant to:
-// memcpy(a + o, b, n);
-function memcpy(a, b, n, o) {
-	for (var i = 0; i < n; i++) {
-		a[i + o] = b[i];
-	}
-}
-
-// ,With offset for second data
-// Will oveflow, but JS likes to return "undefined"
-function compareBytes(a, b, n, o) {
-	for (var c = 0; c < n; c++) {
-		if (a[c] != b[c + o]) {
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-function parseUint32(bytes, offset) {
-	bytes = new Uint8Array(bytes).slice(offset, offset + 4);
-	return new Uint32Array(bytes.buffer)[0];
-}
-
-function bytesUint32(num) {
-	var arr = new ArrayBuffer(4);
-	var view = new DataView(arr);
-	view.setUint32(0, num, true);
-	return new Uint8Array(arr);
-}
-
-// Extra check
+// Sanity check for safety
 if (parseUint32(bytesUint32(123456), 0) != 123456) {
-	document.write("HALT - Endian error");
+	document.write("HALT - Endian error. Contact devs");
 }
 
 var firmware = {
@@ -253,9 +189,38 @@ var firmware = {
 				return;
 			} else {
 				ui.log("Found it at " + mem.toString(16));
-				var newString = stringToUnicodeBytes("FujiHacked!");
+				var newString = stringToUnicodeBytes("FujiHack");
 				this.inject(mem, newString);
 			}	
+		}
+
+		// TODO: firmware.injectAsmSection("PRINTIM")
+
+		// Note: FIRMWARE_ addresses in header files are counted after
+		// the header. So header size MUST ALWAYS be added to FIRMWARE_ addresses.
+		// Or BAD THINGS may happen.
+		if (ui.checkTweak("printim hack")) {
+			if (header.checkMacro("FIRMWARE_PRINTIM")) { return 1; }
+			if (header.checkMacro("FIRMWARE_PRINTIM_MAX")) { return 1; }
+			if (header.checkMacro("MEM_PRINTIM")) { return 1; }
+			
+			var asm = null;
+			try {
+				asm = assemble(fujihack_data.files["main.S"], 
+					header.def("MEM_PRINTIM"));
+			} catch (e) {
+				ui.log(e);
+				return 1;
+			}
+			
+			if (header.def("FIRMWARE_PRINTIM_MAX") <= asm.length) {
+				ui.log("Generated code is too big.");
+				return 1;
+			}
+			
+			console.log(firmware.header.size)
+
+			this.inject(firmware.header.size + header.def("FIRMWARE_PRINTIM"), asm);
 		}
 
 		for (var i = 0; i < this.injections.length; i++) {
@@ -285,6 +250,8 @@ var firmware = {
 
 			// Write modified checksum
 			memcpy(this.result, bytesUint32(this.header.checksum), 4, 4 + this.header.code.length + 4 + 4);
+			
+			ui.log("New checksum: 0x" + this.header.checksum.toString(16));
 		}
 
 		ui.log("<dummy style='color: green;'>Finished patching firmware.</dummy>");
@@ -322,9 +289,9 @@ var firmware = {
 		this.modified = true;
 	},
 
-	// This skips the last >1024 bytes because it makes the code
-	// simpler and we most likely will never want to write there
-	// anyway
+	// Search XORed data
+	// (This skips the last >1024 bytes because it makes the code
+	// simpler and we most likely will never want to write there anyway)
 	search: function(search, n) {
 		var max = 1024;
 		var chunks = Math.floor(firmware.size / max) - 1;
@@ -398,6 +365,19 @@ var header = {
 		error_func: ui.log,
 		include_func: null
 	},
+	
+	checkMacro: function(name) {
+		if (this.cpp.defined(name)) {
+			return 0;
+		} else {
+			ui.log("Macro " + name + " is not defined.");
+			return 1;
+		}
+	},
+	
+	def: function(name) {
+		return eval(this.cpp.subs(name));
+	},
 
 	parse: function(data) {
 		this.data = data;
@@ -408,7 +388,7 @@ var header = {
 		ui.clearInfo();
 
 		var model = "''";
-		if (this.cpp.defined("MODEL_NAME")) {
+		if (!this.checkMacro("MODEL_NAME")) {
 			model = eval(this.cpp.subs("MODEL_NAME"));
 		}
 
@@ -465,6 +445,7 @@ function assemble(file, base) {
 }
 
 function load() {
+	ui.clear();
 	firmware.init();
 	firmware.load(ui.input, function() {
 		if (firmware.parse() == 1) {

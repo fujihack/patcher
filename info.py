@@ -2,7 +2,7 @@
 
 import os, json, re
 
-fh = "/home/daniel/Documents/fujihack"
+fh = os.path.abspath("../fujihack")
 
 models = [
     

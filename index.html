@@ -60,8 +60,9 @@
 	<ul>
 		<li><a href="https://fujihack.github.io/">Learn more about the FujiHack project</a></li>
 		<li><a href="https://discord.gg/UZXDktvAZP">Ask questions</a></li>
-		<li><a href="https://ko-fi.com/petabyte">Buy the developer a coffee</a></li>
+		<li><a href="https://ko-fi.com/petabyte">Donate</a></li>
 	</ul>
+	<i>Warning: The web patcher is currently unfinished, you shouldn't install stuff yet.<br></i>
 	<span>Select firmware DAT: </span><input id="input" onchange="load()" type="file">
 	<div class="panel" id="log"></div>
 	<div class="panel" id="info">Information on your model goes here.</div>
@@ -71,7 +72,9 @@
 <script>ui.log("Loading scripts...");</script>
 <script src="cpp/cpp.js"></script>
 <script src="data.js"></script>
+<script src="util.js"></script>
+<script>ui.log("Loading keystone...");</script>
 <script src="https://danielc.dev/filedump/keystone-arm.min.js"></script>
-<script src="patcher.js"></script>
 <script>ui.log("Everything loaded.");</script>
+<script src="patcher.js"></script>
 </html>

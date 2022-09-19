@@ -33,21 +33,21 @@ var ui = {
 			model: null, selected: false
 		},
 		{
+			name: "printim hack",
+			text: "Code Execution After Taking Picture",
+			tooltip: "Allows code execution over USB/PTP after taking a picture.",
+			model: null, selected: false
+		},
+		{
 			name: "voice memo hack",
 			text: "Voice Memo Code Execution",
-			tooltip: "Allows full code execution over USB/PTP after you record a voice memo.",
+			tooltip: "Jumps to picture taking hack after you record a voice memo, for when taking a picture isn't possible.",
 			model: null, selected: false
 		},
 		{
 			name: "voice memo text fujihack",
 			text: "Set Voice Memo Text to 'FujiHack'",
 			tooltip: "Set the 'Voice Memo' text to 'FujiHack' because why not.",
-			model: null, selected: false
-		},
-		{
-			name: "printim hack",
-			text: "Code Execution After Taking Picture",
-			tooltip: "Allows code execution over USB/PTP after taking a picture.",
 			model: null, selected: false
 		},
 	],
