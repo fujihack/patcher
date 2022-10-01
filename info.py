@@ -17,18 +17,13 @@ for m in model:
 
     data = {
         "name": name,
-        "main": "",
-        "jump": "",
-        "code": ""
+        "file": "",
     }
 
     # Figure out better parsing solution later?
     f = open(fh + "/model/" + name + ".h", "r")
-    matches = data["code"] = re.search(r"#define MODEL_CODE \"([0-9]+)\"", f.read())
-    if matches == None:
-        data["code"] = ""
-    else:
-        data["code"] = matches.group(1)
+    data["data"] = f.read()
+    f.close()
 
     models.append(data)
 
@@ -36,12 +31,11 @@ files = {
     
 }
 
-f = open(fh + "/main.S")
-files["main.S"] = f.read()
-f.close()
-f = open(fh + "/jump.S")
-files["jump.S"] = f.read()
-f.close()
+patch = os.listdir(fh + "/patch")
+for p in patch:
+    f = open(fh + "/patch/" + p, "r")
+    files[p] = f.read()
+    f.close()
 
 info = {
     "files": files,

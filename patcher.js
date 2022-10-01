@@ -4,6 +4,7 @@ if (parseUint32(bytesUint32(123456), 0) != 123456) {
 }
 
 var firmware = {
+	cliMode: false,
 	modified: false,
 	init: function() {
 		this.version = "";
@@ -104,7 +105,7 @@ var firmware = {
 			codeSize = 512;
 			break;
 		default:
-			ui.log("Invalid firmware type");
+			ui.log("Invalid firmware version");
 			return 1;
 		}
 		
@@ -196,12 +197,12 @@ var firmware = {
 
 		// TODO: firmware.injectAsmSection("PRINTIM")
 
-		// Note: FIRMWARE_ addresses in header files are counted after
-		// the header. So header size MUST ALWAYS be added to FIRMWARE_ addresses.
+		// Note: FIRM_ addresses in header files are counted after
+		// the header. So header size MUST ALWAYS be added to FIRM_ addresses.
 		// Or BAD THINGS may happen.
 		if (ui.checkTweak("printim hack")) {
-			if (header.checkMacro("FIRMWARE_PRINTIM")) { return 1; }
-			if (header.checkMacro("FIRMWARE_PRINTIM_MAX")) { return 1; }
+			if (header.checkMacro("FIRM_PRINTIM")) { return 1; }
+			if (header.checkMacro("FIRM_PRINTIM_MAX")) { return 1; }
 			if (header.checkMacro("MEM_PRINTIM")) { return 1; }
 			
 			var asm = null;
@@ -213,14 +214,12 @@ var firmware = {
 				return 1;
 			}
 			
-			if (header.def("FIRMWARE_PRINTIM_MAX") <= asm.length) {
+			if (header.def("FIRM_PRINTIM_MAX") <= asm.length) {
 				ui.log("Generated code is too big.");
 				return 1;
 			}
-			
-			console.log(firmware.header.size)
 
-			this.inject(firmware.header.size + header.def("FIRMWARE_PRINTIM"), asm);
+			this.inject(firmware.header.size + header.def("FIRM_PRINTIM"), asm);
 		}
 
 		for (var i = 0; i < this.injections.length; i++) {
@@ -256,18 +255,20 @@ var firmware = {
 
 		ui.log("<dummy style='color: green;'>Finished patching firmware.</dummy>");
 
-		var a = document.createElement("A");
-		a.innerText = "Download patched firmware";
-		a.href = window.URL.createObjectURL(new Blob([this.result], {
-			type: "application/octet-stream"
-		}));
-		a.download = "FPUPDATE.DAT";
-		ui.clearInfo();
-		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
-			"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
-		ui.info.appendChild(a);
-		ui.info.style.background = "#e6e6e6";
-		this.modified = true;
+		if (!this.cliMode) {
+			var a = document.createElement("A");
+			a.innerText = "Download patched firmware";
+			a.href = window.URL.createObjectURL(new Blob([this.result], {
+				type: "application/octet-stream"
+			}));
+			a.download = "FPUPDATE.DAT";
+			ui.clearInfo();
+			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
+				"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
+			ui.info.appendChild(a);
+			ui.info.style.background = "#e6e6e6";
+			this.modified = true;
+		}
 	},
 
 	readable: function() {
@@ -275,18 +276,21 @@ var firmware = {
 		for (var i = 0; i < this.result.length; i++) {
 			this.result[i] = ~this.result[i];
 		}
-		
-		var a = document.createElement("A");
-		a.innerText = "Download exported firmware code";
-		a.href = window.URL.createObjectURL(new Blob([this.result], {
-			type: "application/octet-stream"
-		}));
-		a.download = "fpupdate-output.bin";
-		ui.clearInfo();
-		ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.", "");
-		ui.info.appendChild(a);
-		ui.info.style.background = "#e6e6e6";
-		this.modified = true;
+
+		if (!cliMode) {		
+			var a = document.createElement("A");
+			a.innerText = "Download exported firmware code";
+			a.href = window.URL.createObjectURL(new Blob([this.result], {
+				type: "application/octet-stream"
+			}));
+
+			a.download = "fpupdate-output.bin";
+			ui.clearInfo();
+			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.", "");
+			ui.info.appendChild(a);
+			ui.info.style.background = "#e6e6e6";
+			this.modified = true;
+		}
 	},
 
 	// Search XORed data
@@ -334,19 +338,20 @@ function request(url, callback) {
 function loadDatabase() {
 	header.init();
 
-	var modelData = fujihack_data.models;
-
 	var code = firmware.parseCode();
-	for (var m = 0; m < modelData.length; m++) {
-		if (modelData[m].code == code) {
-			ui.log("This firmware belonds to the '" + modelData[m].name + "'");
-			ui.log("Downloading model information file...");
-			request("https://raw.githubusercontent.com/fujihack/fujihack/master/model/" + modelData[m].name + ".h", function(data) {
-				header.parse(data);
-			});
-
-			return;
-		}
+	for (var m = 0; m < fujihack_data.models.length; m++) {
+		var cpp = cpp_js(header.settings);
+		cpp.run(fujihack_data.models[m].data);
+		if (!cpp.defined("MODEL_CODE")) {
+			ui.clearInfo();
+			console.log(fujihack_data.models[m].name, "MODEL_CODE is not defined.");
+		} else {
+			if (code == eval(cpp.subs("MODEL_CODE"))) {
+				ui.log("This firmware belonds to the '" + fujihack_data.models[m].name + "'");
+				header.parse(fujihack_data.models[m].data);
+				return;
+			}
+		}		
 	}
 
 	ui.clearInfo();
