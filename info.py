@@ -1,4 +1,4 @@
-# Script is run after stable release
+# Script is run after stable release, pack ../fujihack/ info into JS file
 
 import os, json, re
 

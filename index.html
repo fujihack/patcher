@@ -8,6 +8,10 @@
 	<meta name="description" content="Hacks and tweaks for Fujifilm cameras">
 	<meta name="author" content="Daniel Cook">
 	<style>
+	body, html {
+		font-family: sans-serif;
+	}
+	
 	.loading {
 		display: none;
 	}
@@ -63,11 +67,12 @@
 		<li><a href="https://ko-fi.com/petabyte">Donate</a></li>
 	</ul>
 	<i>Warning: The web patcher is currently unfinished, you shouldn't install stuff yet.<br></i>
-	<span>Select firmware DAT: </span><input id="input" onchange="load()" type="file">
+	<span>Select firmware DAT: </span><input id="input" onchange="load()" type="file" accept=".DAT,.dat">
 	<div class="panel" id="log"></div>
 	<div class="panel" id="info">Information on your model goes here.</div>
 	<div class="panel" id="tweaks">Tweak options will go here.</div>
 </body>
+<script>var cliMode = false;</script>
 <script src="ui.js"></script>
 <script>ui.log("Loading scripts...");</script>
 <script src="cpp/cpp.js"></script>

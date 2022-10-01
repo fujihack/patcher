@@ -50,6 +50,12 @@ var ui = {
 			tooltip: "Set the 'Voice Memo' text to 'FujiHack' because why not.",
 			model: null, selected: false
 		},
+		{
+			name: "photo props dbg",
+			text: "Fujihack Debugger",
+			tooltip: "Replace 'photo properties' popup with FujiHack debugger, which allows code execution.",
+			model: null, selected: false
+		},
 	],
 
 	tweakElems: [],

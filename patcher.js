@@ -1,6 +1,6 @@
 // Sanity check for safety
 if (parseUint32(bytesUint32(123456), 0) != 123456) {
-	document.write("HALT - Endian error. Contact devs");
+	alert("HALT - Endian error. Contact devs\nDo not use the patcher. I repeat, do not use the patcher!!!!");
 }
 
 var firmware = {
@@ -150,8 +150,24 @@ var firmware = {
 			}
 		}
 	},
+	
+	// Check for ARM32 "push" signature, always found at beginning of function
+	// This checks the unxored raw firmware file, so a bit flip must be done
+	checkFuncSignature: function(addr) {
+		addr += firmware.header.size;
+		var data = new Uint8Array(this.reader.result.slice(addr, addr + 4));
+		var flipped = (new Uint8Array([~data[2]]))[0];
+		if (flipped != 0x2d) {
+			ui.log("Function signature test failed");
+			console.log((addr - firmware.header.size).toString(16), flipped);
+			return 0;
+		}
+		
+		return 1;
+	},
 
 	compile: function() {
+		// TODO: This might not be necessary
 		if (this.modified) {
 			ui.log("Firmware buffer has been modified. Please refresh the page.");
 			return 1;
@@ -201,14 +217,21 @@ var firmware = {
 		// the header. So header size MUST ALWAYS be added to FIRM_ addresses.
 		// Or BAD THINGS may happen.
 		if (ui.checkTweak("printim hack")) {
+			if (ui.checkTweak("photo props dbg")) {
+				ui.log("You shouldn't add more than 1 code injection.");
+				return 1;
+			}
+
 			if (header.checkMacro("FIRM_PRINTIM")) { return 1; }
 			if (header.checkMacro("FIRM_PRINTIM_MAX")) { return 1; }
-			if (header.checkMacro("MEM_PRINTIM")) { return 1; }
+			
+			if (!this.checkFuncSignature(header.def("FIRM_PRINTIM"))) { return 1; }
+			
+			// Note: main.S is position independent so we can compile it at 0
 			
 			var asm = null;
 			try {
-				asm = assemble(fujihack_data.files["main.S"], 
-					header.def("MEM_PRINTIM"));
+				asm = assemble(fujihack_data.files["main.S"], 0);
 			} catch (e) {
 				ui.log(e);
 				return 1;
@@ -220,6 +243,38 @@ var firmware = {
 			}
 
 			this.inject(firmware.header.size + header.def("FIRM_PRINTIM"), asm);
+		}
+		
+		if (ui.checkTweak("photo props dbg")) {
+			if (header.checkMacro("FIRM_IMG_PROPS")) { return 1; }
+			if (header.checkMacro("FIRM_IMG_PROPS_MAX")) { return 1; }
+			if (header.checkMacro("FIRM_RST_WRITE")) { return 1; }
+			if (header.checkMacro("FIRM_RST_CONFIG1")) { return 1; }
+			if (header.checkMacro("FIRM_RST_CONFIG2")) { return 1; }
+			
+			if (!this.checkFuncSignature(header.def("FIRM_IMG_PROPS"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_RST_WRITE"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG1"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG2"))) { return 1; }
+			
+			ui.log("All sanity checks passed.");
+			
+			var asm = null;
+			try {
+				asm = assemble(fujihack_data.files["debug.S"], header.def("FIRM_IMG_PROPS"));
+			} catch (e) {
+				ui.log(e);
+				return 1;
+			}
+			
+			if (header.def("FIRM_IMG_PROPS_MAX") <= asm.length) {
+				ui.log("Generated code is too big.");
+				return 1;
+			} else {
+				ui.log("Generated code is " + asm.length + " bytes");
+			}
+
+			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
 		}
 
 		for (var i = 0; i < this.injections.length; i++) {
@@ -368,7 +423,7 @@ var header = {
 		signal_char: '#',
 		warn_func: ui.log,
 		error_func: ui.log,
-		include_func: null
+		include_func: null,
 	},
 	
 	checkMacro: function(name) {
@@ -383,6 +438,15 @@ var header = {
 	def: function(name) {
 		return eval(this.cpp.subs(name));
 	},
+	
+	parseIncludes: function(file) {
+		var files = Object.keys(fujihack_data.files);
+		for (var i = 0; i < files.length; i++) {
+			file = file.replace('#include "' + files[i] + '"', fujihack_data.files[files[i]]);
+		}
+		
+		return file;
+	},
 
 	parse: function(data) {
 		this.data = data;
@@ -391,7 +455,7 @@ var header = {
 		var header = this.cpp.run(data);
 
 		ui.clearInfo();
-
+	
 		var model = "''";
 		if (!this.checkMacro("MODEL_NAME")) {
 			model = eval(this.cpp.subs("MODEL_NAME"));
@@ -432,8 +496,8 @@ var header = {
 
 function assemble(file, base) {
 	var a = new ks.Keystone(ks.ARCH_ARM, ks.MODE_LITTLE_ENDIAN);
-	var cpp = cpp_js(header.settings);
-	var processed = cpp.run(header.data + file);
+	var allData = header.parseIncludes(file);
+	var processed = header.cpp.run(allData);
 
 	var code;
 	try {
