@@ -244,8 +244,9 @@ var firmware = {
 
 			this.inject(firmware.header.size + header.def("FIRM_PRINTIM"), asm);
 		}
-		
-		if (ui.checkTweak("photo props dbg")) {
+
+		// Sanity checks for photo prop hacks
+		if (ui.checkTweak("photo props dbg") || ui.checkTweak("photo props quick")) {
 			if (header.checkMacro("FIRM_IMG_PROPS")) { return 1; }
 			if (header.checkMacro("FIRM_IMG_PROPS_MAX")) { return 1; }
 			if (header.checkMacro("FIRM_RST_WRITE")) { return 1; }
@@ -256,12 +257,32 @@ var firmware = {
 			if (!this.checkFuncSignature(header.def("FIRM_RST_WRITE"))) { return 1; }
 			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG1"))) { return 1; }
 			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG2"))) { return 1; }
-			
-			ui.log("All sanity checks passed.");
-			
+			ui.log("All photo props sanity checks passed.");
+		}
+		
+		if (ui.checkTweak("photo props dbg")) {
 			var asm = null;
 			try {
 				asm = assemble(fujihack_data.files["debug.S"], header.def("FIRM_IMG_PROPS"));
+			} catch (e) {
+				ui.log(e);
+				return 1;
+			}
+			
+			if (header.def("FIRM_IMG_PROPS_MAX") <= asm.length) {
+				ui.log("Generated code is too big.");
+				return 1;
+			} else {
+				ui.log("Generated code is " + asm.length + " bytes");
+			}
+
+			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
+		}
+
+		if (ui.checkTweak("photo props quick")) {
+			var asm = null;
+			try {
+				asm = assemble(fujihack_data.files["quick.S"], header.def("FIRM_IMG_PROPS"));
 			} catch (e) {
 				ui.log(e);
 				return 1;

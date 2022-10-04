@@ -1,6 +1,3 @@
 [submodule "cpp.js"]
 	path = cpp.js
 	url = https://github.com/acgessler/cpp.js
-[submodule "cpp"]
-	path = cpp
-	url = https://github.com/acgessler/cpp.js

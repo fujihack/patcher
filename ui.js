@@ -56,6 +56,12 @@ var ui = {
 			tooltip: "Replace 'photo properties' popup with FujiHack debugger, which allows code execution.",
 			model: null, selected: false
 		},
+		{
+			name: "photo props quick",
+			text: "Fujihack Quick PTP",
+			tooltip: "No debugger, a fast copy of the PTP hijack into RAM.",
+			model: null, selected: false
+		},
 	],
 
 	tweakElems: [],
