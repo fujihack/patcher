@@ -36,14 +36,14 @@ var ui = {
 			name: "printim hack",
 			text: "Code Execution After Taking Picture",
 			tooltip: "Allows code execution over USB/PTP after taking a picture.",
-			model: null, selected: false
+			model: null, selected: false, deps: ["FIRM_PRINTIM", "FIRM_PRINTIM_MAX"]
 		},
-		{
-			name: "voice memo hack",
-			text: "Voice Memo Code Execution",
-			tooltip: "Jumps to picture taking hack after you record a voice memo, for when taking a picture isn't possible.",
-			model: null, selected: false
-		},
+		// {
+			// name: "voice memo hack",
+			// text: "Voice Memo Code Execution",
+			// tooltip: "Jumps to picture taking hack after you record a voice memo, for when taking a picture isn't possible.",
+			// model: null, selected: false
+		// },
 		{
 			name: "voice memo text fujihack",
 			text: "Set Voice Memo Text to 'FujiHack'",
@@ -54,13 +54,19 @@ var ui = {
 			name: "photo props dbg",
 			text: "Fujihack Debugger",
 			tooltip: "Replace 'photo properties' popup with FujiHack debugger, which allows code execution.",
-			model: null, selected: false
+			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
 		{
 			name: "photo props quick",
 			text: "Fujihack Quick PTP",
 			tooltip: "No debugger, a fast copy of the PTP hijack into RAM.",
-			model: null, selected: false
+			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+		},
+		{
+			name: "direct ptp",
+			text: "Fujihack Direct PTP Copy",
+			tooltip: "Directly copy the PTP hack into firmware, for cameras who have it exposed.",
+			model: null, selected: false, deps: ["MEM_PTP_EXPOSED", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
 	],
 
@@ -88,11 +94,39 @@ var ui = {
 			i.innerHTML = this.tweaks[n].tooltip;
 			p.appendChild(i);
 
+			var isValid = true;
+			var invalids = [];
+			if (this.tweaks[n].deps != undefined && header.cpp != null) {
+				for (var d = 0; d < this.tweaks[n].deps.length; d++) {
+					if (!header.cpp.defined(this.tweaks[n].deps[d])) {
+						isValid = false;
+						invalids.push(this.tweaks[n].deps[d]);
+					}
+				}
+			}
+
+			// If header file is not valid/parsed
+			if (header.cpp == null && this.tweaks[n].deps != undefined) {
+				isValid = false;
+			}
+
 			tweaks.appendChild(p);
-			this.tweakElems.push({
-				name: this.tweaks[n].name,
-				elem: input
-			});
+			if (isValid) {
+				this.tweakElems.push({
+					name: this.tweaks[n].name,
+					elem: input
+				});
+			} else {
+				input.disabled = true;
+				var msg = "This tweak is disabled because ";
+				for (var x = 0; x < invalids.length; x++) {
+					msg += invalids[x] + " ";
+				}
+
+				msg += "was not defined";
+				i.innerHTML += "<br>" + msg;
+				p.style.color = "grey";
+			}
 		}
 
 		var btn = document.createElement("BUTTON");

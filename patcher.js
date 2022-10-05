@@ -30,6 +30,7 @@ var firmware = {
 
 	// Load as array buffer
 	load: function(file, callback) {
+		ui.clear();
 		if (file.files.length > 1) {
 			ui.log("Only select one file.");
 			return 1;
@@ -424,7 +425,7 @@ function loadDatabase() {
 		} else {
 			if (code == eval(cpp.subs("MODEL_CODE"))) {
 				ui.log("This firmware belonds to the '" + fujihack_data.models[m].name + "'");
-				header.parse(fujihack_data.models[m].data);
+				header.initFile(fujihack_data.models[m].data);
 				return;
 			}
 		}		
@@ -469,7 +470,7 @@ var header = {
 		return file;
 	},
 
-	parse: function(data) {
+	initFile: function(data) {
 		this.data = data;
 		this.cpp = cpp_js(this.settings);
 
@@ -535,16 +536,16 @@ function assemble(file, base) {
 }
 
 function load() {
-	ui.clear();
+	header.init();
 	firmware.init();
 	firmware.load(ui.input, function() {
 		if (firmware.parse() == 1) {
 			return 1;
 		}
 
-		ui.initTweaks();
-
 		loadDatabase();
+
+		ui.initTweaks();
 	});
 }
 
