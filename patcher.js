@@ -4,7 +4,6 @@ if (parseUint32(bytesUint32(123456), 0) != 123456) {
 }
 
 var firmware = {
-	cliMode: false,
 	modified: false,
 	init: function() {
 		this.version = "";
@@ -182,6 +181,16 @@ var firmware = {
 				4 + this.header.code.length + 4);
 		}
 
+		if (ui.checkTweak("custom version")) {
+			ui.log("Prompting custom version");
+			var version = prompt("Enter a custom firmware version (X.XX)");
+			var versions = version.split(".");
+			memcpy(this.result, bytesUint32(parseInt(versions[0], 16)), 4,
+				4 + this.header.code.length + 4);
+			memcpy(this.result, bytesUint32(parseInt(versions[1], 16)), 4,
+				4 + this.header.code.length);
+		}
+
 		if (ui.checkTweak("change shooting menu")) {
 			ui.log("Looking for SHOOTING MENU...");
 
@@ -234,7 +243,6 @@ var firmware = {
 			try {
 				asm = assemble(fujihack_data.files["main.S"], 0);
 			} catch (e) {
-				ui.log(e);
 				return 1;
 			}
 			
@@ -248,12 +256,6 @@ var firmware = {
 
 		// Sanity checks for photo prop hacks
 		if (ui.checkTweak("photo props dbg") || ui.checkTweak("photo props quick")) {
-			if (header.checkMacro("FIRM_IMG_PROPS")) { return 1; }
-			if (header.checkMacro("FIRM_IMG_PROPS_MAX")) { return 1; }
-			if (header.checkMacro("FIRM_RST_WRITE")) { return 1; }
-			if (header.checkMacro("FIRM_RST_CONFIG1")) { return 1; }
-			if (header.checkMacro("FIRM_RST_CONFIG2")) { return 1; }
-			
 			if (!this.checkFuncSignature(header.def("FIRM_IMG_PROPS"))) { return 1; }
 			if (!this.checkFuncSignature(header.def("FIRM_RST_WRITE"))) { return 1; }
 			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG1"))) { return 1; }
@@ -266,7 +268,6 @@ var firmware = {
 			try {
 				asm = assemble(fujihack_data.files["debug.S"], header.def("FIRM_IMG_PROPS"));
 			} catch (e) {
-				ui.log(e);
 				return 1;
 			}
 			
@@ -285,7 +286,6 @@ var firmware = {
 			try {
 				asm = assemble(fujihack_data.files["quick.S"], header.def("FIRM_IMG_PROPS"));
 			} catch (e) {
-				ui.log(e);
 				return 1;
 			}
 			
@@ -527,7 +527,7 @@ function assemble(file, base) {
 	} catch (err) {
 		ui.log(err);
 		ui.log("Error assembling code.");
-		return 1;
+		throw err;
 	}
 
 	ui.log("Assembled code");
@@ -549,4 +549,6 @@ function load() {
 	});
 }
 
-load();
+if (!cliMode) {
+	load();
+}

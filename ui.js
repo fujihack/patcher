@@ -27,6 +27,12 @@ var ui = {
 			model: null, selected: true
 		},
 		{
+			name: "custom version",
+			text: "Set custom firmware version.",
+			tooltip: "Set firmware version to any version, for example 1.0 or 13.37",
+			model: null, selected: false
+		},
+		{
 			name: "change shooting menu",
 			text: "Change a string",
 			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
@@ -44,12 +50,12 @@ var ui = {
 			// tooltip: "Jumps to picture taking hack after you record a voice memo, for when taking a picture isn't possible.",
 			// model: null, selected: false
 		// },
-		{
-			name: "voice memo text fujihack",
-			text: "Set Voice Memo Text to 'FujiHack'",
-			tooltip: "Set the 'Voice Memo' text to 'FujiHack' because why not.",
-			model: null, selected: false
-		},
+		// {
+			// name: "voice memo text fujihack",
+			// text: "Set Voice Memo Text to 'FujiHack'",
+			// tooltip: "Set the 'Voice Memo' text to 'FujiHack' because why not.",
+			// model: null, selected: false
+		// },
 		{
 			name: "photo props dbg",
 			text: "Fujihack Debugger",
@@ -59,7 +65,7 @@ var ui = {
 		{
 			name: "photo props quick",
 			text: "Fujihack Quick PTP",
-			tooltip: "No debugger, a fast copy of the PTP hijack into RAM.",
+			tooltip: "No debugger, no brute force searching through RAM. Requires info from a RAM dump.",
 			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
 		{
@@ -106,12 +112,11 @@ var ui = {
 			}
 
 			// If header file is not valid/parsed
-			if (header.cpp == null && this.tweaks[n].deps != undefined) {
-				isValid = false;
-			}
-
 			tweaks.appendChild(p);
-			if (isValid) {
+			if (header.cpp == null && this.tweaks[n].deps != undefined) {
+				i.innerHTML += "<br>This tweak is disabled because this model has no header file.";
+				p.className = "greyed";
+			} else if (isValid) {
 				this.tweakElems.push({
 					name: this.tweaks[n].name,
 					elem: input
@@ -125,7 +130,7 @@ var ui = {
 
 				msg += "was not defined";
 				i.innerHTML += "<br>" + msg;
-				p.style.color = "grey";
+				p.className = "greyed";
 			}
 		}
 
