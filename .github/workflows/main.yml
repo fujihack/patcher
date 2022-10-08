@@ -1,0 +1,35 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install deps
+      run: sudo apt install node
+
+    - name: Download XF1 firmware
+      run: cd ..; wget https://dl.fujifilm-x.com/support/firmware/xf1YbzzDmLK/FPUPDATE.DAT -O FPUPDATE-xf1.DAT
+
+    - name: XF1 patch tests
+      run: |
+        node cli.js ../FPUPDATE-xf1.DAT "increment version"
+        node cli.js ../FPUPDATE-xf1.DAT "increment version" "photo props dbg"
+        node cli.js ../FPUPDATE-xf1.DAT "increment version" "photo props quick"
+
+    - name: Download X-T20 firmware
+      run: cd ..; wget https://dl.fujifilm-x.com/support/firmware/x-t20-210-9cy17ibx/FWUP0013.DAT -O FPUPDATE-xt20.DAT
+      
+    - name: X-T20 patch tests
+      run: |
+        node cli.js ../FPUPDATE-xt20.DAT "increment version"
+        node cli.js ../FPUPDATE-xt20.DAT "increment version" "direct ptp"
