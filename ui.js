@@ -66,7 +66,7 @@ var ui = {
 			name: "photo props quick",
 			text: "Fujihack Quick PTP",
 			tooltip: "No debugger, no brute force searching through RAM. Requires info from a RAM dump.",
-			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2", "MEM_PTP_9805", "MEM_PTP_RETURN"]
 		},
 		{
 			name: "direct ptp",
