@@ -72,7 +72,7 @@ var ui = {
 			name: "direct ptp",
 			text: "Fujihack Direct PTP Copy",
 			tooltip: "Directly copy the PTP hack into firmware, for cameras who have it exposed.",
-			model: null, selected: false, deps: ["MEM_PTP_EXPOSED", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+			model: null, selected: false, deps: ["FIRM_PTP_9805", "FIRM_PTP_FINISH", "FIRM_PTP_MAX"]
 		},
 	],
 

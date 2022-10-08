@@ -131,6 +131,11 @@ var firmware = {
 	},
 	
 	inject: function(address, data) {
+		if (address == "" || address == 0) {
+			ui.log("Error, null injection address.");
+			return;
+		}
+
 		this.injections.push({
 			address: address,
 			data: data
@@ -299,6 +304,24 @@ var firmware = {
 			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
 		}
 
+		if (ui.checkTweak("direct ptp")) {
+			var asm = null;
+			try {
+				asm = assemble(fujihack_data.files["ptp.S"], header.def("FIRM_PTP_9805"));
+			} catch (e) {
+				return 1;
+			}
+			
+			if (header.def("FIRM_PTP_MAX") <= asm.length) {
+				ui.log("Generated code is too big.");
+				return 1;
+			} else {
+				ui.log("Generated code is " + asm.length + " bytes");
+			}
+
+			this.inject(firmware.header.size + header.def("FIRM_PTP_9805"), asm);
+		}
+
 		for (var i = 0; i < this.injections.length; i++) {
 			var size = this.injections[i].data.length;
 
@@ -332,7 +355,7 @@ var firmware = {
 
 		ui.log("<dummy style='color: green;'>Finished patching firmware.</dummy>");
 
-		if (!this.cliMode) {
+		if (!cliMode) {
 			var a = document.createElement("A");
 			a.innerText = "Download patched firmware";
 			a.href = window.URL.createObjectURL(new Blob([this.result], {
