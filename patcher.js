@@ -25,6 +25,7 @@ var firmware = {
 		};
 
 		this.injections = [];
+		this.filename = "FPUPDATE.DAT";
 	},
 
 	// Load as array buffer
@@ -37,6 +38,7 @@ var firmware = {
 			return 1;
 		}
 
+		this.filename = file.files[0].name;
 		this.size = file.files[0].size;
 
 		var reader = new FileReader();
@@ -231,6 +233,7 @@ var firmware = {
 		// Note: FIRM_ addresses in header files are counted after
 		// the header. So header size MUST ALWAYS be added to FIRM_ addresses.
 		// Or BAD THINGS may happen.
+
 		if (ui.checkTweak("printim hack")) {
 			if (ui.checkTweak("photo props dbg")) {
 				ui.log("You shouldn't add more than 1 code injection.");
@@ -246,7 +249,7 @@ var firmware = {
 			
 			var asm = null;
 			try {
-				asm = assemble(fujihack_data.files["main.S"], 0);
+				asm = assemble(fujihack_data.files["old.S"], 0);
 			} catch (e) {
 				return 1;
 			}
@@ -282,6 +285,9 @@ var firmware = {
 			} else {
 				ui.log("Generated code is " + asm.length + " bytes");
 			}
+
+			//fs.writeFile("injection.txt", header.cpp.run(header.parseIncludes(fujihack_data.files["debug.S"])), function() {});
+			//fs.writeFile("injection.bin", asm, function() {});
 
 			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
 		}
@@ -361,7 +367,7 @@ var firmware = {
 			a.href = window.URL.createObjectURL(new Blob([this.result], {
 				type: "application/octet-stream"
 			}));
-			a.download = "FPUPDATE.DAT";
+			a.download = this.filename;
 			ui.clearInfo();
 			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
 				"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
