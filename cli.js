@@ -43,10 +43,13 @@ if (process.argv.length >= 3) {
 	}
 
 	firmware.init();
-	console.log(process.argv[2])
+	console.log(process.argv[2]);
 	firmwareLoad(process.argv[2]);
 	loadDatabase();
 	firmware.compile();
+	fs.writeFile(process.argv[2] + "_", firmware.result, function(x) {
+		console.log("File saved");
+	});
 }
 function firmwareLoad(filename) {
 	// Copy file data into arraybuffer
