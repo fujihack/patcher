@@ -11,6 +11,15 @@
 	body, html {
 		font-family: sans-serif;
 	}
+
+	body.dark {
+		background-color: #333;
+		color: #FFF;
+	}
+
+	body.dark a {
+		color: lightblue;
+	}
 	
 	.loading {
 		display: none;
@@ -25,7 +34,7 @@
 		overflow-x: scroll;
 	}
 
-	button {
+	button:not(#theme) {
 		margin-top: 10px;
 		padding: 5px;
 		border: 2px solid black;
@@ -60,9 +69,20 @@
 	.greyed {
 		color: #737272;
 	}
+
+	div#bottom {
+		margin-top: 1em;
+		bottom: 1em;
+		left: auto;
+		right: auto;
+	}
+	button#theme {
+		width: 8em;
+		height: 2em;
+	}
 	</style>
 </head>
-<body>
+<body class="">
 	<h1>Fujifilm X/GFX/HS Firmware Patcher</h1>
 	<p>Written by <a href="https://danielc.dev/">Daniel Cook</a></p>
 	<ul>
@@ -74,7 +94,19 @@
 	<div class="panel" id="log"></div>
 	<div class="panel" id="info">Information on your model goes here.</div>
 	<div class="panel" id="tweaks">Tweak options will go here.</div>
+	<div id="bottom">
+		<button onclick="toggleTheme()" id="theme">Theme Toggle</button>
+	</div>
 </body>
+<script>
+	"true" == localStorage.getItem("dark") ? 
+		document.body.classList = 'dark' : 
+		document.body.classList = '';
+
+	function toggleTheme() {
+		localStorage.setItem("dark", document.body.classList.toggle('dark'));
+	}
+</script>
 <script>var cliMode = false;</script>
 <script src="ui.js"></script>
 <script>ui.log("Loading scripts...");</script>
@@ -85,4 +117,5 @@
 <script src="keystone-arm.min.js"></script>
 <script>ui.log("Everything loaded.");</script>
 <script src="patcher.js"></script>
+
 </html>
