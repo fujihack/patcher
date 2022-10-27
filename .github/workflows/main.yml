@@ -33,3 +33,6 @@ jobs:
       run: |
         node cli.js ../FPUPDATE-xt20.DAT "increment version"
         node cli.js ../FPUPDATE-xt20.DAT "increment version" "direct ptp"
+
+    - name: Run FIRM_URL tests
+      run: node test.js
