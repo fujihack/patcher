@@ -270,6 +270,13 @@ var firmware = {
 			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG2"))) { return 1; }
 			ui.log("All photo props sanity checks passed.");
 		}
+
+		// Direct PTP hack sanity check
+		if (ui.checkTweak("direct ptp")) {
+			if (!this.checkFuncSignature(header.def("FIRM_PTP_9805"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_PTP_FINISH"))) { return 1; }
+			ui.log("All direct ptp sanity checks passed.");
+		}
 		
 		if (ui.checkTweak("photo props dbg")) {
 			var asm = null;
@@ -290,6 +297,19 @@ var firmware = {
 			//fs.writeFile("injection.bin", asm, function() {});
 
 			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
+		}
+
+		if (ui.checkTweak("photo props dbg fix")) {
+			if (!this.checkFuncSignature(header.def("FIRM_USB_SCREEN"))) { return 1; }
+			console.log("sanity checks passed");
+			var asm = null;
+			try {
+				asm = assemble("b FIRM_IMG_PROPS", header.def("FIRM_USB_SCREEN"));
+			} catch (e) {
+				return 1;
+			}
+
+			this.inject(firmware.header.size + header.def("FIRM_USB_SCREEN"), asm);
 		}
 
 		if (ui.checkTweak("photo props quick")) {
@@ -554,6 +574,7 @@ function assemble(file, base) {
 	try {
 		code = a.asm(processed, base);
 	} catch (err) {
+		console.log(processed, base);
 		ui.log(err);
 		ui.log("Error assembling code.");
 		throw err;
