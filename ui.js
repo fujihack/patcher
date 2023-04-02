@@ -77,7 +77,7 @@ var ui = {
 		{
 			name: "photo props dbg fix",
 			text: "Fujihack photo props fix",
-			tooltip: "Directly copy the PTP hack into firmware, for cameras who have it exposed.",
+			tooltip: "Hook onto the USB plugged-in screen instead of the photo properties menu",
 			model: null, selected: false, deps: ["FIRM_USB_SCREEN", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
 	],
