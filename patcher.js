@@ -384,7 +384,7 @@ var firmware = {
 			ui.log("New checksum: 0x" + this.header.checksum.toString(16));
 		}
 
-		ui.log("<dummy style='color: green;'>Finished patching firmware.</dummy>");
+		ui.log("<dummy style='color: #77d577;'>Finished patching firmware.</dummy>");
 
 		if (!cliMode) {
 			var a = document.createElement("A");
@@ -397,7 +397,7 @@ var firmware = {
 			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
 				"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
 			ui.info.appendChild(a);
-			ui.info.style.background = "#e6e6e6";
+			ui.info.style.background = "#474f47";
 			this.modified = true;
 		}
 	},

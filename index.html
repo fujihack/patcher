@@ -12,13 +12,13 @@
 		font-family: sans-serif;
 	}
 
-	body.dark {
+	body {
 		background-color: #333;
-		color: #FFF;
+		color: white;
 	}
 
-	body.dark a {
-		color: lightblue;
+	a {
+		color: #b1cdc9;
 	}
 	
 	.loading {
@@ -31,10 +31,10 @@
 		border: 2px solid black;
 		width: 50%;
 		display: block;
-		overflow-x: scroll;
+		background: #4d4d4d;
 	}
 
-	button:not(#theme) {
+	button {
 		margin-top: 10px;
 		padding: 5px;
 		border: 2px solid black;
@@ -67,7 +67,7 @@
 	}
 
 	.greyed {
-		color: #737272;
+		color: #8b8989;
 	}
 
 	div#bottom {
@@ -76,6 +76,7 @@
 		left: auto;
 		right: auto;
 	}
+
 	button#theme {
 		width: 8em;
 		height: 2em;
@@ -94,19 +95,7 @@
 	<div class="panel" id="log"></div>
 	<div class="panel" id="info">Information on your model goes here.</div>
 	<div class="panel" id="tweaks">Tweak options will go here.</div>
-	<div id="bottom">
-		<button onclick="toggleTheme()" id="theme">Theme Toggle</button>
-	</div>
 </body>
-<script>
-	"true" == localStorage.getItem("dark") ? 
-		document.body.classList = 'dark' : 
-		document.body.classList = '';
-
-	function toggleTheme() {
-		localStorage.setItem("dark", document.body.classList.toggle('dark'));
-	}
-</script>
 <script>var cliMode = false;</script>
 <script src="ui.js"></script>
 <script>ui.log("Loading scripts...");</script>

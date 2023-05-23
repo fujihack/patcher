@@ -16,6 +16,7 @@ var ui = {
 	},
 
 	clearInfo: function() {
+		ui.info.style.background = "";
 		this.info.innerHTML = "";
 	},
 
