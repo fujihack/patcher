@@ -57,7 +57,8 @@ var firmware = {
 
 		// Every other byte in model code should be '3' or 0x33
 		if (this.header.code[0] != 0x33) {
-			ui.log("Model code isn't normal. Still valid.");
+			// TODO: Creates noise
+			//ui.log("Model code isn't as we expect. Still valid.");
 		}
 
 		for (var i = 1; i < this.header.code.length; i += 2) {
@@ -77,12 +78,12 @@ var firmware = {
 
 		// Recognise common header start strings
 		if (compareBytes(header, stringToBytes("SUNP BURN FILE"), 14, 0)) {
-			ui.log("This firmware is a SUNP burn file. This hack will not work on these cameras. I'm sorry.");
+			ui.log("This firmware is a SUNP burn file. This hack will not work on these cameras. Sorry.");
 			return 1;
 		}
 
 		if (compareBytes(header, stringToBytes("LENGTH"), 6, 0)) {
-			ui.log("FujiHack can't work with this firmware type. I'm sorry.");
+			ui.log("FujiHack can't work with this firmware type. Sorry.");
 			return 1;
 		}
 
@@ -113,18 +114,22 @@ var firmware = {
 		
 		this.header.code = new Uint8Array(header.slice(4, 4 + codeSize))
 
-		this.header.version1 = parseUint32(header, 4 + codeSize)
-		this.header.version2 = parseUint32(header, 4 + codeSize + 4)
-		this.header.checksum = parseUint32(header, 4 + codeSize + 4 + 4)
-		this.header.end = parseUint32(header, 4 + codeSize + 4 + 4 + 4)
+		this.header.version1 = parseUint32(header, codeSize + 4)
+		this.header.version2 = parseUint32(header, codeSize + 8)
+		this.header.checksum = parseUint32(header, codeSize + 12)
+		this.header.end = parseUint32(header, codeSize + 16)
 
-		this.header.size = 4 + codeSize + 4 + 4 + 4 + 4;
+		this.header.size = codeSize + 20;
 
 		this.version = firmware.header.version1.toString(16);
 		if (firmware.header.version2 < 16) {
 			this.version += 0;
 		}
 		this.version += firmware.header.version2.toString(16);
+
+		if (this.header.end == 2) {
+			ui.log("This appears to be a lens.");
+		}
 
 		ui.log("Firmware version is " + this.header.version1.toString(16) + "." + this.header.version2.toString(16));
 		ui.log("Firmware checksum is 0x" + this.header.checksum.toString(16));
@@ -206,7 +211,7 @@ var firmware = {
 
 			if (mem == -1) {
 				ui.log("Search failed.");
-				return; // TODO: will compiling firmware again interfere with last compilation?
+				return; // TODO: will compiling firmware again interfere with last compilation? Doesn't seem like it.
 			} else {
 				ui.log("Found it at " + mem.toString(16));
 				var newString = stringToUnicodeBytes("FujiHacked!");

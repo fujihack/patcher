@@ -48,7 +48,7 @@ if (process.argv.length >= 3) {
 	loadDatabase();
 	firmware.compile();
 	fs.writeFile(process.argv[2] + "_", firmware.result, function(x) {
-		console.log("File saved");
+		console.log("File saved as '" + process.argv[2] + "_'");
 	});
 }
 

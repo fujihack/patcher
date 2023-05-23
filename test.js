@@ -1,3 +1,4 @@
+// CI test script
 var cliMode = true;
 var fs = require("fs");
 var cp = require('child_process')

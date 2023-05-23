@@ -61,5 +61,3 @@ function bytesUint32(num) {
 	view.setUint32(0, num, true);
 	return new Uint8Array(arr);
 }
-
-
