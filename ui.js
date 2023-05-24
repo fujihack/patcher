@@ -64,23 +64,29 @@ var ui = {
 			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
 		{
+			name: "photo props dbg fix",
+			text: "Fujihack photo props fix",
+			tooltip: "Hook onto the USB plugged-in screen instead of the photo properties menu, if it isn't enabled in camera.",
+			model: null, selected: false, deps: ["FIRM_USB_SCREEN", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+		},
+		{
 			name: "photo props quick",
 			text: "Fujihack Quick PTP",
 			tooltip: "No debugger, no brute force searching through RAM. Requires info from a RAM dump.",
 			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2", "MEM_PTP_9805", "MEM_PTP_RETURN"]
 		},
 		{
-			name: "direct ptp",
-			text: "Fujihack Direct PTP Copy",
-			tooltip: "Directly copy the PTP hack into firmware, for cameras who have it exposed.",
-			model: null, selected: false, deps: ["FIRM_PTP_9805", "FIRM_PTP_FINISH", "FIRM_PTP_MAX"]
+			name: "hack loader",
+			text: "Fujihack loader",
+			tooltip: "Allows Fujihack to be loaded after pressing the INSTAX settings menu option.",
+			model: null, selected: false, deps: ["FIRM_INSTAX_MENU", "FIRM_INSTAX_MENU_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
 		},
-		{
-			name: "photo props dbg fix",
-			text: "Fujihack photo props fix",
-			tooltip: "Hook onto the USB plugged-in screen instead of the photo properties menu",
-			model: null, selected: false, deps: ["FIRM_USB_SCREEN", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
-		},
+		// {
+			// name: "direct ptp",
+			// text: "Fujihack Direct PTP Copy",
+			// tooltip: "Directly copy the PTP hack into firmware, for cameras who have it exposed.",
+			// model: null, selected: false, deps: ["FIRM_PTP_9805", "FIRM_PTP_FINISH", "FIRM_PTP_MAX"]
+		// },
 	],
 
 	tweakElems: [],
@@ -144,7 +150,9 @@ var ui = {
 		var btn = document.createElement("BUTTON");
 		btn.innerText = "Compile patched firmware";
 		btn.addEventListener("click", function() {
-			firmware.compile();
+			if (firmware.compile() == 1) {
+				ui.log("Compilation failed\n");
+			}
 		});
 		tweaks.appendChild(btn);
 

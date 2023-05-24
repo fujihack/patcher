@@ -178,6 +178,18 @@ var firmware = {
 		return 1;
 	},
 
+	checkBytes: function(addr, bytes) {
+		addr += firmware.header.size;
+		var data = new Uint8Array(this.reader.result.slice(addr, addr + 4));
+		for (var i = 0; i < bytes.length; i++) {
+			if (bytes[i] != ~(data[i])) {
+				return 1;
+			}
+		}
+
+		return 0;
+	},
+
 	compile: function() {
 		// TODO: This might not be necessary
 		if (this.modified) {
@@ -335,22 +347,51 @@ var firmware = {
 			this.inject(firmware.header.size + header.def("FIRM_IMG_PROPS"), asm);
 		}
 
-		if (ui.checkTweak("direct ptp")) {
+		if (ui.checkTweak("hack loader")) {
+			if (!this.checkFuncSignature(header.def("FIRM_RST_WRITE"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG1"))) { return 1; }
+			if (!this.checkFuncSignature(header.def("FIRM_RST_CONFIG2"))) { return 1; }
+
+			if (header.checkMacro("FIRM_INSTAX_MENU")) { return 1; }
+			if (header.checkMacro("FIRM_INSTAX_MENU_MAX")) { return 1; }
+			
+			if (!this.checkFuncSignature(header.def("FIRM_INSTAX_MENU"))) { return 1; }
+
+			if (!this.checkBytes(header.def("FIRM_INSTAX_MENU"), new Uint8Array([0xf0, 0x4f, 0x2d, 0xe9]))) {
+				return 1;
+			} else {
+				console.log("Function is as expected");
+			}
+
+			ui.log("All loader sanity checks passed.");
+
+			// Note: main.S is position independent so we can compile it at 0
+			
 			var asm = null;
 			try {
-				asm = assemble(fujihack_data.files["ptp.S"], header.def("FIRM_PTP_9805"));
+				asm = assemble(fujihack_data.files["file.S"], header.def("FIRM_INSTAX_MENU"));
 			} catch (e) {
 				return 1;
 			}
 			
-			if (header.def("FIRM_PTP_MAX") <= asm.length) {
+			if (header.def("FIRM_INSTAX_MENU_MAX") <= asm.length) {
 				ui.log("Generated code is too big.");
 				return 1;
-			} else {
-				ui.log("Generated code is " + asm.length + " bytes");
 			}
 
-			this.inject(firmware.header.size + header.def("FIRM_PTP_9805"), asm);
+			this.inject(firmware.header.size + header.def("FIRM_INSTAX_MENU"), asm);
+
+			var connsetting = stringToUnicodeBytes("PRINTER CONNECTION SETTING");
+			var mem = this.search(connsetting, connsetting.length);
+
+			if (mem == -1) {
+				ui.log("Search failed.");
+				return 1;
+			} else {
+				ui.log("Found it at " + mem.toString(16));
+				var newString = stringToUnicodeBytes("Fujihack");
+				this.inject(mem, newString);
+			}
 		}
 
 		for (var i = 0; i < this.injections.length; i++) {
@@ -419,7 +460,7 @@ var firmware = {
 			ui.clearInfo();
 			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.", "");
 			ui.info.appendChild(a);
-			ui.info.style.background = "#e6e6e6";
+			ui.info.style.background = "#474f47";
 			this.modified = true;
 		}
 	},
@@ -493,6 +534,7 @@ var header = {
 	init: function() {
 		this.data = "";
 		this.cpp = null;
+		this.stubs = null;
 	},
 
 	settings: { 
@@ -510,7 +552,8 @@ var header = {
 			return 1;
 		}
 	},
-	
+
+	// TODO: Rename to header.macro?
 	def: function(name) {
 		return eval(this.cpp.subs(name));
 	},
@@ -520,6 +563,13 @@ var header = {
 		for (var i = 0; i < files.length; i++) {
 			file = file.replace('#include "' + files[i] + '"', fujihack_data.files[files[i]]);
 		}
+
+		// cpp.js does not like any whitespace before defining a macro (?)
+		file = file.replace("#include \"stub.h\"",
+`\n#define NSTUB(name, addr) \
+.global name; \
+.extern name; \
+name = (addr)`);
 		
 		return file;
 	},
@@ -528,7 +578,8 @@ var header = {
 		this.data = data;
 		this.cpp = cpp_js(this.settings);
 
-		var header = this.cpp.run(data);
+		data = this.parseIncludes(data);
+		this.stubs = this.cpp.run("#define STUBS\n" + data);
 
 		ui.clearInfo();
 	
@@ -573,7 +624,7 @@ var header = {
 function assemble(file, base) {
 	var a = new ks.Keystone(ks.ARCH_ARM, ks.MODE_LITTLE_ENDIAN);
 	var allData = header.parseIncludes(file);
-	var processed = header.cpp.run(allData);
+	var processed = header.cpp.run(header.stubs + "\n" + allData);
 
 	var code;
 	try {
