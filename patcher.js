@@ -191,13 +191,17 @@ var firmware = {
 	},
 
 	compile: function() {
-		// TODO: This might not be necessary
+		// TODO: This is 'just in case', need to make sure later
 		if (this.modified) {
 			ui.log("Firmware buffer has been modified. Please refresh the page.");
 			return 1;
 		}
 	
 		this.loadFirmware(0);
+
+		// Note: FIRM_ addresses in header files are counted after
+		// the header. So header size MUST ALWAYS be added to FIRM_ addresses.
+		// Or BAD THINGS may happen.
 
 		if (ui.checkTweak("increment version")) {
 			ui.log("Incrementing version by one...");
@@ -246,10 +250,6 @@ var firmware = {
 		}
 
 		// TODO: firmware.injectAsmSection("PRINTIM")
-
-		// Note: FIRM_ addresses in header files are counted after
-		// the header. So header size MUST ALWAYS be added to FIRM_ addresses.
-		// Or BAD THINGS may happen.
 
 		if (ui.checkTweak("printim hack")) {
 			if (ui.checkTweak("photo props dbg")) {
