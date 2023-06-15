@@ -38,12 +38,12 @@ var ui = {
 			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
 			model: null, selected: false
 		},
-		{
-			name: "printim hack",
-			text: "Code Execution After Taking Picture",
-			tooltip: "Allows code execution over USB/PTP after taking a picture.",
-			model: null, selected: false, deps: ["FIRM_PRINTIM", "FIRM_PRINTIM_MAX"]
-		},
+		// {
+			// name: "printim hack",
+			// text: "Code Execution After Taking Picture",
+			// tooltip: "Allows code execution over USB/PTP after taking a picture.",
+			// model: null, selected: false, deps: ["FIRM_PRINTIM", "FIRM_PRINTIM_MAX"]
+		// },
 		{
 			name: "photo props dbg",
 			text: "Fujihack Debugger",
