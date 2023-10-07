@@ -214,9 +214,9 @@ var firmware = {
 			var version = prompt("Enter a custom firmware version (X.XX)");
 			var versions = version.split(".");
 			memcpy(this.result, bytesUint32(parseInt(versions[0], 16)), 4,
-				4 + this.header.code.length + 4);
-			memcpy(this.result, bytesUint32(parseInt(versions[1], 16)), 4,
 				4 + this.header.code.length);
+			memcpy(this.result, bytesUint32(parseInt(versions[1], 16)), 4,
+				4 + this.header.code.length + 4);
 		}
 
 		if (ui.checkTweak("change shooting menu")) {
@@ -421,9 +421,12 @@ var firmware = {
 
 			// Write modified checksum
 			memcpy(this.result, bytesUint32(this.header.checksum), 4, 4 + this.header.code.length + 4 + 4);
-			
-			ui.log("New checksum: 0x" + this.header.checksum.toString(16));
 		}
+
+		this.header.version1 = parseUint32(this.result, (firmware.header.code.length) + 4);
+		this.header.version2 = parseUint32(this.result, (firmware.header.code.length) + 8);
+		ui.log("New version is " + this.header.version1.toString(16) + "." + this.header.version2.toString(16));
+		ui.log("New checksum: 0x" + this.header.checksum.toString(16));
 
 		ui.log("<dummy style='color: #77d577;'>Finished patching firmware.</dummy>");
 
