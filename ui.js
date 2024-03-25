@@ -32,12 +32,12 @@ var ui = {
 			tooltip: "Set firmware version to any version, for example 1.0 or 13.37",
 			model: null, selected: false
 		},
-		{
-			name: "change shooting menu",
-			text: "Change a string",
-			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
-			model: null, selected: false
-		},
+//		{
+//			name: "change shooting menu",
+//			text: "Change a string",
+//			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
+//			model: null, selected: false
+//		},
 		// {
 			// name: "printim hack",
 			// text: "Code Execution After Taking Picture",
