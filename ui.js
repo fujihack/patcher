@@ -31,7 +31,7 @@ var ui = {
 			text: "Set custom firmware version.",
 			tooltip: "Set firmware version to any version, for example 1.0 or 13.37",
 			model: null, selected: false
-		// },
+		 },
 		// {
 		// 	name: "change shooting menu",
 		// 	text: "Change a string",
