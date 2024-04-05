@@ -23,7 +23,7 @@ var ui = {
 		{
 			name: "increment version",
 			text: "Increment version by 1.",
-			tooltip: "Allows the firmware file to be accepted by the camera.",
+			tooltip: "Allows the latest firmware file to be accepted by the camera.",
 			model: null, selected: true
 		},
 		{
