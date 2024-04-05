@@ -31,43 +31,43 @@ var ui = {
 			text: "Set custom firmware version.",
 			tooltip: "Set firmware version to any version, for example 1.0 or 13.37",
 			model: null, selected: false
-		},
-		{
-			name: "change shooting menu",
-			text: "Change a string",
-			tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
-			model: null, selected: false
-		},
+		// },
+		// {
+		// 	name: "change shooting menu",
+		// 	text: "Change a string",
+		// 	tooltip: "Changes the string 'SHOOTING MENU' to 'FujiHacked'. Good as a first test.",
+		// 	model: null, selected: false
+		// },
 		// {
 			// name: "printim hack",
 			// text: "Code Execution After Taking Picture",
 			// tooltip: "Allows code execution over USB/PTP after taking a picture.",
 			// model: null, selected: false, deps: ["FIRM_PRINTIM", "FIRM_PRINTIM_MAX"]
 		// },
-		{
-			name: "photo props dbg",
-			text: "Fujihack Debugger",
-			tooltip: "Replace 'photo properties' popup with FujiHack debugger, which allows code execution.",
-			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
-		},
-		{
-			name: "photo props dbg fix",
-			text: "Fujihack dbg fix",
-			tooltip: "Run the photo properties menu from the USB plugged-in screen, in case the menu is dead code. Required for most ports.",
-			model: null, selected: false, deps: ["FIRM_USB_SCREEN", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
-		},
-		{
-			name: "photo props quick",
-			text: "Fujihack Quick PTP",
-			tooltip: "No debugger, no brute force searching through RAM. Requires info from a RAM dump.",
-			model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2", "MEM_PTP_9805", "MEM_PTP_RETURN"]
-		},
-		{
-			name: "hack loader",
-			text: "Fujihack loader",
-			tooltip: "Allows Fujihack to be loaded after pressing the INSTAX settings menu option. Button will be renamed.",
-			model: null, selected: false, deps: ["FIRM_INSTAX_MENU", "FIRM_INSTAX_MENU_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
-		},
+		// {
+		// 	name: "photo props dbg",
+		// 	text: "Fujihack Debugger",
+		// 	tooltip: "Replace 'photo properties' popup with FujiHack debugger, which allows code execution.",
+		// 	model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+		// },
+		// {
+		// 	name: "photo props dbg fix",
+		// 	text: "Fujihack dbg fix",
+		// 	tooltip: "Run the photo properties menu from the USB plugged-in screen, in case the menu is dead code. Required for most ports.",
+		// 	model: null, selected: false, deps: ["FIRM_USB_SCREEN", "FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+		// },
+		// {
+		// 	name: "photo props quick",
+		// 	text: "Fujihack Quick PTP",
+		// 	tooltip: "No debugger, no brute force searching through RAM. Requires info from a RAM dump.",
+		// 	model: null, selected: false, deps: ["FIRM_IMG_PROPS", "FIRM_IMG_PROPS_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2", "MEM_PTP_9805", "MEM_PTP_RETURN"]
+		// },
+		// {
+		// 	name: "hack loader",
+		// 	text: "Fujihack loader",
+		// 	tooltip: "Allows Fujihack to be loaded after pressing the INSTAX settings menu option. Button will be renamed.",
+		// 	model: null, selected: false, deps: ["FIRM_INSTAX_MENU", "FIRM_INSTAX_MENU_MAX", "FIRM_RST_WRITE", "FIRM_RST_CONFIG1", "FIRM_RST_CONFIG2"]
+		// },
 		// {
 			// name: "direct ptp",
 			// text: "Fujihack Direct PTP Copy",
