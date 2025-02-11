@@ -105,6 +105,7 @@ var firmware = {
 		case 4:
 		case 5: // Not confirmed yet
 		case 6:
+		case 8:
 			codeSize = 512;
 			break;
 		default:
