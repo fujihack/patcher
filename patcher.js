@@ -440,7 +440,7 @@ var firmware = {
 			a.download = this.filename;
 			ui.clearInfo();
 			ui.addInfo("By Downloading you agree to the <a href='https://github.com/fujihack/fujihack/blob/master/LICENSE'>GPL3.0 License</a>.",
-				"Even the smallest typo in the patcher can brick your camera. If it breaks, you get to keep both pieces.");
+				"If it breaks, you get to keep both pieces.");
 			ui.info.appendChild(a);
 			ui.info.style.background = "#474f47";
 			this.modified = true;
